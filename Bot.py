@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from model import get_class
+from model import detect_food
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -24,7 +24,7 @@ async def add(ctx, left: int, right: int):
     await ctx.send(left + right)
 
 @bot.command()
-async def check(ctx):
+async def save(ctx):
     if ctx.message.attachments:
         for attachment in ctx.message.attachments:
             file_name = attachment.filename
@@ -37,13 +37,17 @@ async def check(ctx):
 
 @bot.command()
 async def check(ctx):
-    if ctx.message.attachment:
+    if ctx.message.attachments:
         for attachment in ctx.message.attachments:
             file_name = attachment.filename
             file_url = attachment.url
             await attachment.save(f"./{attachment.filename}")
-            await ctx.send(get_class (model_path="./keras_model.h5", labels_path="labels.txt", image_path=f"./{attachment.filename}"))
+            result = (detect_food (image_path=f"./{attachment.filename}", model="./keras_model.h5", class_names="./labels.txt" , ))
+            if result[0] == "Mie Ayam\n" and result[1] >= 0.8:
+                await ctx.send('Ini pasti gambar mie ayam enak sekali')
+            else:
+                await ctx.send(f"Ini kayanya gambar {result[0]} deh")
     else:
         await ctx.send("No file attached. womp womp")
 
-bot.run("token")
+bot.run("Token")
